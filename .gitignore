@@ -1,3 +1,16 @@
-/build
-/out
-/.vs
+# Build
+build/
+out/
+
+# Editor dir
+.vs/
+.vscode/
+
+# Build result
+*.a
+*.so
+*.out
+
+# Windows build result
+*.dll
+*.exe
