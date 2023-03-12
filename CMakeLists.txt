@@ -3,9 +3,7 @@ if(POLICY CMP0048)
 endif()
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
-project ("libiconv_cmake" VERSION 1.17.0)
-
-option(USE_SHARED_LIB "use shared lib" OFF)
+project ("cppp.libiconv" VERSION 1.17)
 
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckFunctionExists)
@@ -337,16 +335,21 @@ CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/include/iconv.h.in ${CMAKE_CURRENT_B
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/include/libcharset.h.in ${CMAKE_CURRENT_BINARY_DIR}/libcharset/include/libcharset.h)
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/include/localcharset.h.in ${CMAKE_CURRENT_BINARY_DIR}/libcharset/include/localcharset.h)
 
-# Definitions
-if (USE_SHARED_LIB)
-    add_definitions(-DLIBICONV_SHARED_BUILD)
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 IF (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-D_WIN32_NATIVE)
 ENDIF (WIN32)
-
 IF (MSVC)
     add_definitions(/wd4018)
     add_definitions(/wd4273)
@@ -356,54 +359,37 @@ IF (MSVC)
     add_definitions(/wd4311)
     add_definitions(/wd4267)
 ENDIF (MSVC)
-
 add_definitions(-DICONV_NO_LIBDIR)
 add_definitions(-DLIBDIR)
 if(NOT MSVC)
-	add_definitions(-O2)
+    add_definitions(-O2)
+endif()
+if (NOT DEFINED CMAKE_DEBUG_POSTFIX)
+    set(CMAKE_DEBUG_POSTFIX "_d")
 endif()
 
 # Includes
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/srclib ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/libcharset/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib)  
-
 IF (WIN32)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/msvc)
 ENDIF (WIN32)
-
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
-# Build
+function(iconv_build USE_SHARED_LIB)
+    if (USE_SHARED_LIB)
+        add_definitions(-DLIBICONV_SHARED_BUILD)
+    else()
+        remove_definitions(-DLIBICONV_SHARED_BUILD)
+    endif()
+    if (USE_SHARED_LIB)
+        add_library(iconv SHARED ${CMAKE_CURRENT_SOURCE_DIR}/lib/iconv.c ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib/localcharset.c)
+        set_target_properties(iconv PROPERTIES VERSION ${LIBICONV_VERSION} SOVERSION ${LIBICONV_SOVERSION} DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX} IMPORTED_IMPLIB cppp.libiconv.shared.lib)
+    else()
+        add_library(iconv.static STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/iconv.c ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib/localcharset.c)
+        set_target_properties(iconv.static PROPERTIES INTERFACE_COMPILE_DEFINITIONS "LIBICONV_STATIC" DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+    endif()
+endfunction(iconv_build)
 
-if (NOT DEFINED CMAKE_DEBUG_POSTFIX)
-  set(CMAKE_DEBUG_POSTFIX "_Debug")
-endif()
-
-if (USE_SHARED_LIB)
-   add_library(iconv ${CMAKE_CURRENT_SOURCE_DIR}/lib/iconv.c ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib/localcharset.c)
-   set_target_properties(iconv PROPERTIES VERSION ${LIBICONV_VERSION} SOVERSION ${LIBICONV_SOVERSION} DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-else()
-   add_library(iconv STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/iconv.c ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib/localcharset.c)
-   set_target_properties(iconv PROPERTIES INTERFACE_COMPILE_DEFINITIONS "LIBICONV_STATIC" DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-endif()
-
-target_include_directories(iconv
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-    )
-    
-# Install
-install(FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/include/iconv.h
-	DESTINATION include
-	)
-
-install(TARGETS iconv
-    EXPORT Targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-    )
-
-
+iconv_build(TRUE)
+iconv_build(FALSE)
