@@ -371,12 +371,12 @@ set(LIBICONV_VERSION ${PROJECT_VERSION})
 set(LIBICONV_SOVERSION ${LIBICONV_VERSION})
 
 # Includes
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/srclib ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/libcharset/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib)  
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${ICONV_BUILD_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/srclib ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+include_directories(${ICONV_BUILD_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/include ${CMAKE_CURRENT_SOURCE_DIR}/libcharset/lib)  
 IF (WIN32)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/msvc)
 ENDIF (WIN32)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories(${ICONV_BUILD_DIR}/include)
 
 function(iconv_build USE_SHARED_LIB)
     if (USE_SHARED_LIB)
@@ -392,8 +392,6 @@ function(iconv_build USE_SHARED_LIB)
         set_target_properties(iconv.static PROPERTIES INTERFACE_COMPILE_DEFINITIONS "LIBICONV_STATIC" )
     endif()
 endfunction(iconv_build)
-
-
 
 iconv_build(TRUE)
 iconv_build(FALSE)
