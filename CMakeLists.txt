@@ -1,3 +1,4 @@
+# This file is add by ChenPi11 for cmake build, not GNU Libiconv 1.17 files.
 if(POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif()

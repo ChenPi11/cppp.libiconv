@@ -1,0 +1,14 @@
+# This file is add by ChenPi11 for cppp GNU Make build, not GNU Libiconv 1.17 files.
+PREFIX ?= /usr/local
+libiconv :
+	cat COPYING
+	$(SHELL) configure --prefix=$(PREFIX) \
+		--enable-year2038 --enable-largefile --enable-shared --enable-static --enable-relocatable --enable-extra-encodings \
+		--disable-nls \
+		--without-iconv --without-libintl-prefix \
+		$(CONFIGURE_FLAGS)
+	$(MAKE) -f Makefile -j$(nproc) \
+		$(MAKE_FLAGS)
+	$(MAKE) install \
+		$(MAKE_INSTALL_FLAGS)
+all : $(MAKE) libiconv
